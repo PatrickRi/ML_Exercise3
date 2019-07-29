@@ -14,8 +14,8 @@ from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 
 image_size = (64, 64)
-batch_size = 16
-NAME = 'LeNet5-FullAug_16b'
+batch_size = 32
+NAME = 'Fruits-Example-FullAug'
 
 
 def main():
@@ -76,15 +76,31 @@ def main():
     )
 
     model = Sequential()
-    model.add(Conv2D(6, (3, 3), input_shape=(image_size[0], image_size[1], 3), activation='relu'))
-    model.add(AveragePooling2D())
 
-    model.add(Conv2D(16, (3, 3), activation='relu'))
-    model.add(AveragePooling2D())
+    n_filters = 16
+    # this applies n_filters convolution filters of size 5x5 resp. 3x3 each in the 2 layers below
 
-    model.add(Flatten())
-    model.add(Dense(120, activation='relu'))
-    model.add(Dense(84, activation='relu'))
+    # Layer 1
+    model.add(Convolution2D(n_filters, 3, 3, border_mode='valid', input_shape=(image_size[0], image_size[1], 3)))
+    # input shape: 100x100 images with 3 channels -> input_shape should be (3, 100, 100)
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))  # ReLu activation
+    model.add(MaxPooling2D(pool_size=(2, 2)))  # reducing image resolution by half
+    model.add(Dropout(0.3))  # random "deletion" of %-portion of units in each batch
+
+    # Layer 2
+    model.add(Convolution2D(n_filters, 3, 3))  # input_shape is only needed in 1st layer
+    # model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    # model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.3))
+
+    model.add(Flatten())  # Note: Keras does automatic shape inference.
+
+    # Full Layer
+    model.add(Dense(256))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.1))
     model.add(Dense(30, activation='softmax'))
 
     model.compile(
@@ -95,8 +111,8 @@ def main():
     now = time.strftime("%b%d_%H-%M")
     model.fit_generator(
         generator_train,
-        steps_per_epoch=10000 // batch_size,
-        epochs=50,
+        steps_per_epoch=3000 // batch_size,
+        epochs=100,
         validation_data=generator_test,
         validation_steps=500 // batch_size,
         callbacks=[TensorBoard(histogram_freq=0, log_dir=os.path.join(log_dir, 'logs', now+'-'+NAME),
