@@ -18,7 +18,7 @@ from sklearn.model_selection import train_test_split
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config-file', default='config.yaml', help='YAML Config File')
-    parser.add_argument('--expname', default='LeNet5-FullAugNoVert_SGD_32b_100x100',
+    parser.add_argument('--expname', default='LeNet5-NoAug-SGD_32b',
                         help='Name of the experiment (Tensorboard).')
 
     with open(parser.parse_args().config_file, 'r') as ymlfile:
@@ -27,7 +27,7 @@ def main():
     log_dir = _config["tensorboard-log-path"]
     expname = parser.parse_args().expname
     np.random.seed(0)
-    image_size = (int(_config["image-size-x"]), int(_config["image-size-y"]))
+    image_size = (int(_config["fruits-image-size-x"]), int(_config["fruits-image-size-y"]))
     batch_size = _config["batch-size"]
 
     os.chdir(_config["fruits-image-path"])
@@ -55,12 +55,12 @@ def main():
     datagen_train = ImageDataGenerator(rescale=1. / 255,
                                        # featurewise_center=True,
                                        # featurewise_std_normalization=True,
-                                       rotation_range=20,
-                                       width_shift_range=0.2,
-                                       height_shift_range=0.2,
-                                       shear_range=0.2,
-                                       zoom_range=0.2,
-                                       horizontal_flip=True,
+                                       # rotation_range=20,
+                                       # width_shift_range=0.2,
+                                       # height_shift_range=0.2,
+                                       # shear_range=0.2,
+                                       # zoom_range=0.2,
+                                       # horizontal_flip=True,
                                        # vertical_flip=True,
                                        )
     datagen_train.fit(X_train)
@@ -77,17 +77,12 @@ def main():
         batch_size=batch_size
     )
 
-    model = Sequential()
-    model.add(Conv2D(6, (3, 3), input_shape=(image_size[0], image_size[1], 3), activation='relu'))
-    model.add(AveragePooling2D())
-
-    model.add(Conv2D(16, (3, 3), activation='relu'))
-    model.add(AveragePooling2D())
-
-    model.add(Flatten())
-    model.add(Dense(120, activation='relu'))
-    model.add(Dense(84, activation='relu'))
-    model.add(Dense(30, activation='softmax'))
+    if _config["fruits-model"] == 'lenet5':
+        model = get_LeNet5_model(image_size)
+    elif _config["fruits-model"] == 'example':
+        model = get_example_model(image_size)
+    else:
+        raise Exception('model not valid')
 
     model.compile(
         loss='categorical_crossentropy',
@@ -104,6 +99,46 @@ def main():
         callbacks=[TensorBoard(histogram_freq=0, log_dir=os.path.join(log_dir, now + '-' + expname),
                                write_graph=True)]
     )
+
+
+def get_example_model(image_size):
+    model = Sequential()
+    n_filters = 16
+    # Layer 1
+    model.add(Convolution2D(n_filters, 3, 3, border_mode='valid', input_shape=(image_size[0], image_size[1], 3)))
+    model.add(BatchNormalization())
+    model.add(Activation('relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.3))
+
+    # Layer 2
+    model.add(Convolution2D(n_filters, 3, 3))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.3))
+
+    model.add(Flatten())
+
+    # Full Layer
+    model.add(Dense(256))
+    model.add(Activation('relu'))
+    model.add(Dropout(0.1))
+    model.add(Dense(30, activation='softmax'))
+    return model
+
+
+def get_LeNet5_model(image_size):
+    model = Sequential()
+    model.add(Conv2D(6, (3, 3), input_shape=(image_size[0], image_size[1], 3), activation='relu'))
+    model.add(AveragePooling2D())
+
+    model.add(Conv2D(16, (3, 3), activation='relu'))
+    model.add(AveragePooling2D())
+
+    model.add(Flatten())
+    model.add(Dense(120, activation='relu'))
+    model.add(Dense(84, activation='relu'))
+    model.add(Dense(30, activation='softmax'))
+    return model
 
 
 if __name__ == '__main__':

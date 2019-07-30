@@ -2,9 +2,12 @@ fruits-image-path: 'C:\Users\Patrick\Documents\TU\2019S\ML\ML_Exercise3\ML_Exerc
 cars-image-path: 'C:\Users\Patrick\Documents\TU\2019S\ML\ML_Exercise3\ML_Exercise3\data\CarData'
 plot-path: 'C:\Users\Patrick\Documents\TU\2019S\ML\ML_Exercise3\ML_Exercise3'
 tensorboard-log-path: 'C:\Users\Patrick\Documents\TU\2019S\ML\ML_Exercise3\ML_Exercise3\logs2'
+fruits-model: lenet5
 optimizer: sgd
-image-size-x: 100
-image-size-y: 40
+cars-image-size-x: 100
+cars-image-size-y: 40
+fruits-image-size-x: 64
+fruits-image-size-y: 64
 batch-size: 32
-epochs: 100
-steps-per-epoch: 6000
+epochs: 50
+steps-per-epoch: 2000
