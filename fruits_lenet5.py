@@ -15,7 +15,7 @@ from sklearn.model_selection import train_test_split
 
 image_size = (64, 64)
 batch_size = 16
-NAME = 'LeNet5-FullAug_16b'
+NAME = 'LeNet5-FullAugNoVert_SGD_16b'
 
 
 def main():
@@ -59,7 +59,7 @@ def main():
                                        shear_range=0.2,
                                        zoom_range=0.2,
                                        horizontal_flip=True,
-                                       vertical_flip=True,
+                                       #vertical_flip=True,
                                        )
     datagen_train.fit(X_train)
     generator_train = datagen_train.flow(
@@ -89,14 +89,14 @@ def main():
 
     model.compile(
         loss='categorical_crossentropy',
-        optimizer='adam',
+        optimizer='sgd',
         metrics=['accuracy']
     )
     now = time.strftime("%b%d_%H-%M")
     model.fit_generator(
         generator_train,
-        steps_per_epoch=10000 // batch_size,
-        epochs=50,
+        steps_per_epoch=6000 // batch_size,
+        epochs=100,
         validation_data=generator_test,
         validation_steps=500 // batch_size,
         callbacks=[TensorBoard(histogram_freq=0, log_dir=os.path.join(log_dir, 'logs', now+'-'+NAME),
