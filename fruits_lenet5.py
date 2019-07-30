@@ -4,6 +4,7 @@ import os
 import time
 
 import cv2
+import yaml
 from PIL import Image
 from keras import Sequential
 from keras.callbacks import TensorBoard
@@ -13,20 +14,22 @@ from keras_preprocessing.image import ImageDataGenerator
 from sklearn import preprocessing
 from sklearn.model_selection import train_test_split
 
-image_size = (64, 64)
-batch_size = 16
-NAME = 'LeNet5-FullAugNoVert_SGD_16b'
-
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dir', default='../data/FIDS30/', help='Root folder for the (unprocessed) data set.')
-    parser.add_argument('--log_dir', default='C:\\Users\\Patrick\\Documents\\TU\\2019S\\ML\\ML_Exercise3\\ML_Exercise3',
-                        help='Root folder for TensorBoard logging.')
-    dir = parser.parse_args().dir
-    log_dir = parser.parse_args().log_dir
+    parser.add_argument('--config-file', default='config.yaml', help='YAML Config File')
+    parser.add_argument('--expname', default='LeNet5-FullAugNoVert_SGD_32b_100x100',
+                        help='Name of the experiment (Tensorboard).')
 
-    os.chdir(dir)
+    with open(parser.parse_args().config_file, 'r') as ymlfile:
+        _config = yaml.load(ymlfile)
+
+    log_dir = _config["tensorboard-log-path"]
+    expname = parser.parse_args().expname
+    image_size = (int(_config["image-size-x"]), int(_config["image-size-y"]))
+    batch_size=_config["batch-size"]
+
+    os.chdir(_config["fruits-image-path"])
     fileNames = glob.glob("*/*.jpg")
     targetLabels = []
     imageList = []
@@ -59,7 +62,7 @@ def main():
                                        shear_range=0.2,
                                        zoom_range=0.2,
                                        horizontal_flip=True,
-                                       #vertical_flip=True,
+                                       # vertical_flip=True,
                                        )
     datagen_train.fit(X_train)
     generator_train = datagen_train.flow(
@@ -89,7 +92,7 @@ def main():
 
     model.compile(
         loss='categorical_crossentropy',
-        optimizer='sgd',
+        optimizer=_config["optimizer"],
         metrics=['accuracy']
     )
     now = time.strftime("%b%d_%H-%M")
@@ -99,7 +102,7 @@ def main():
         epochs=100,
         validation_data=generator_test,
         validation_steps=500 // batch_size,
-        callbacks=[TensorBoard(histogram_freq=0, log_dir=os.path.join(log_dir, 'logs', now+'-'+NAME),
+        callbacks=[TensorBoard(histogram_freq=0, log_dir=os.path.join(log_dir, now + '-' + expname),
                                write_graph=True)]
     )
 

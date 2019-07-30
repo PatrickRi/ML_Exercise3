@@ -1,0 +1,7 @@
+fruits-image-path: 'C:\Users\Patrick\Documents\TU\2019S\ML\ML_Exercise3\ML_Exercise3\data\FIDS30'
+plot-path: 'C:\Users\Patrick\Documents\TU\2019S\ML\ML_Exercise3\ML_Exercise3'
+tensorboard-log-path: 'C:\Users\Patrick\Documents\TU\2019S\ML\ML_Exercise3\ML_Exercise3\logs'
+optimizer: sgd
+image-size-x: 100
+image-size-y: 100
+batch-size: 32
