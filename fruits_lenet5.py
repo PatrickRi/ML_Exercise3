@@ -28,7 +28,7 @@ def main():
     expname = parser.parse_args().expname
     np.random.seed(0)
     image_size = (int(_config["image-size-x"]), int(_config["image-size-y"]))
-    batch_size=_config["batch-size"]
+    batch_size = _config["batch-size"]
 
     os.chdir(_config["fruits-image-path"])
     fileNames = glob.glob("*/*.jpg")
@@ -37,7 +37,6 @@ def main():
     for fileName in fileNames:
         pathSepIndex = fileName.index(os.path.sep)
         targetLabels.append(fileName[:pathSepIndex])
-        # print(np.array(Image.open(fileName)).shape)
         image = cv2.resize(np.array(Image.open(fileName)), image_size)
         imageList.append(np.array(image))
 
@@ -51,7 +50,6 @@ def main():
     target = np.delete(target, toDelete, 0)
     target_C = to_categorical(target)
 
-    # imageArr = np.array(imageList)
     X_train, X_test, y_train, y_test = train_test_split(imageArr, target_C, random_state=42)
 
     datagen_train = ImageDataGenerator(rescale=1. / 255,

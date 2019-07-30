@@ -24,7 +24,6 @@ def main():
     log_dir = _config["tensorboard-log-path"]
     expname = parser.parse_args().expname
     np.random.seed(0)
-    image_size = (int(_config["image-size-x"]), int(_config["image-size-y"]))
     batch_size = _config["batch-size"]
 
     os.chdir(_config["cars-image-path"])
@@ -40,14 +39,10 @@ def main():
         image = cv2.resize(np.array(Image.open(fileName)), (int(_config["image-size-y"]), int(_config["image-size-x"])))
         imageList.append(np.array(image))
 
-    # toDelete = np.where(np.array([x.shape for x in imageList]) == 4)[0][0]
-    # del imageList[toDelete]
     img_array = np.array(imageList)
     img_array = img_array.reshape(img_array.shape[0], img_array.shape[1], img_array.shape[2], 1)
-    # target = np.delete(target, toDelete, 0)
     target_C = targetLabels
 
-    # imageArr = np.array(imageList)
     X_train, X_test, y_train, y_test = train_test_split(img_array, target_C, random_state=42)
 
     datagen_train = ImageDataGenerator(rescale=1. / 255,
