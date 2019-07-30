@@ -26,6 +26,7 @@ def main():
 
     log_dir = _config["tensorboard-log-path"]
     expname = parser.parse_args().expname
+    np.random.seed(0)
     image_size = (int(_config["image-size-x"]), int(_config["image-size-y"]))
     batch_size=_config["batch-size"]
 
@@ -98,8 +99,8 @@ def main():
     now = time.strftime("%b%d_%H-%M")
     model.fit_generator(
         generator_train,
-        steps_per_epoch=6000 // batch_size,
-        epochs=100,
+        steps_per_epoch=int(_config["steps-per-epoch"]) // batch_size,
+        epochs=int(_config["epochs"]),
         validation_data=generator_test,
         validation_steps=500 // batch_size,
         callbacks=[TensorBoard(histogram_freq=0, log_dir=os.path.join(log_dir, now + '-' + expname),

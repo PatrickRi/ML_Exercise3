@@ -4,6 +4,7 @@ import os
 import time
 
 import cv2
+import yaml
 from PIL import Image
 from keras import Sequential
 from keras.callbacks import TensorBoard
@@ -11,20 +12,22 @@ from keras.layers import *
 from keras_preprocessing.image import ImageDataGenerator
 from sklearn.model_selection import train_test_split
 
-image_size = (64, 64)
-batch_size = 32
-NAME = 'Cars-Example-FullAugNoVert-StdNorm'
-
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--dir', default='../data/CarData/', help='Root folder for the (unprocessed) data set.')
-    parser.add_argument('--log_dir', default='C:\\Users\\Patrick\\Documents\\TU\\2019S\\ML\\ML_Exercise3\\ML_Exercise3',
-                        help='Root folder for TensorBoard logging.')
-    dir = parser.parse_args().dir
-    log_dir = parser.parse_args().log_dir
+    parser.add_argument('--config-file', default='config.yaml', help='YAML Config File')
+    parser.add_argument('--expname', default='Cars-Example-FullAugNoVert-StdNorm-100x40',
+                        help='Name of the experiment (Tensorboard).')
+    with open(parser.parse_args().config_file, 'r') as ymlfile:
+        _config = yaml.load(ymlfile)
+
+    log_dir = _config["tensorboard-log-path"]
+    expname = parser.parse_args().expname
     np.random.seed(0)
-    os.chdir(dir)
+    image_size = (int(_config["image-size-x"]), int(_config["image-size-y"]))
+    batch_size = _config["batch-size"]
+
+    os.chdir(_config["cars-image-path"])
     fileNames = glob.glob("*/*.pgm")
     targetLabels = []
     imageList = []
@@ -34,7 +37,7 @@ def main():
         else:
             targetLabels.append(1)
         # print(np.array(Image.open(fileName)).shape)
-        image = cv2.resize(np.array(Image.open(fileName)), image_size)
+        image = cv2.resize(np.array(Image.open(fileName)), (int(_config["image-size-y"]), int(_config["image-size-x"])))
         imageList.append(np.array(image))
 
     # toDelete = np.where(np.array([x.shape for x in imageList]) == 4)[0][0]
@@ -42,15 +45,14 @@ def main():
     img_array = np.array(imageList)
     img_array = img_array.reshape(img_array.shape[0], img_array.shape[1], img_array.shape[2], 1)
     # target = np.delete(target, toDelete, 0)
-    # TODO target_C = to_categorical(target)
     target_C = targetLabels
 
     # imageArr = np.array(imageList)
     X_train, X_test, y_train, y_test = train_test_split(img_array, target_C, random_state=42)
 
     datagen_train = ImageDataGenerator(rescale=1. / 255,
-                                       featurewise_center=True,
-                                       featurewise_std_normalization=True,
+                                       #featurewise_center=True,
+                                       #featurewise_std_normalization=True,
                                        rotation_range=20,
                                        width_shift_range=0.2,
                                        height_shift_range=0.2,
@@ -79,7 +81,7 @@ def main():
     # this applies n_filters convolution filters of size 5x5 resp. 3x3 each in the 2 layers below
 
     # Layer 1
-    model.add(Convolution2D(n_filters, 3, 3, border_mode='valid', input_shape=(image_size[0], image_size[1], 1)))
+    model.add(Convolution2D(n_filters, 3, 3, border_mode='valid', input_shape=(100, 40, 1)))
     # input shape: 100x100 images with 3 channels -> input_shape should be (3, 100, 100)
     model.add(BatchNormalization())
     model.add(Activation('relu'))  # ReLu activation
@@ -103,17 +105,17 @@ def main():
 
     model.compile(
         loss='binary_crossentropy',
-        optimizer='sgd',
+        optimizer=_config["optimizer"],
         metrics=['accuracy']
     )
     now = time.strftime("%b%d_%H-%M")
     model.fit_generator(
         generator_train,
-        steps_per_epoch=3000 // batch_size,
-        epochs=50,
+        steps_per_epoch=int(_config["steps-per-epoch"]) // batch_size,
+        epochs=int(_config["epochs"]),
         validation_data=generator_test,
         validation_steps=500 // batch_size,
-        callbacks=[TensorBoard(histogram_freq=0, log_dir=os.path.join(log_dir, 'logs2', now + '-' + NAME),
+        callbacks=[TensorBoard(histogram_freq=0, log_dir=os.path.join(log_dir, now + '-' + expname),
                                write_graph=True)]
     )
 
