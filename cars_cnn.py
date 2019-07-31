@@ -16,7 +16,7 @@ from sklearn.model_selection import train_test_split
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--config-file', default='config.yaml', help='YAML Config File')
-    parser.add_argument('--expname', default='Cars-LeNet5-FullAugNoVert-100x40',
+    parser.add_argument('--expname', default='Cars-LeNet5-NoAug-100x40',
                         help='Name of the experiment (Tensorboard).')
     with open(parser.parse_args().config_file, 'r') as ymlfile:
         _config = yaml.load(ymlfile)
@@ -49,12 +49,12 @@ def main():
     datagen_train = ImageDataGenerator(rescale=1. / 255,
                                        # featurewise_center=True,
                                        # featurewise_std_normalization=True,
-                                       rotation_range=20,
-                                       width_shift_range=0.2,
-                                       height_shift_range=0.2,
-                                       shear_range=0.2,
-                                       zoom_range=0.2,
-                                       horizontal_flip=True,
+                                       #rotation_range=20,
+                                       #width_shift_range=0.2,
+                                       #height_shift_range=0.2,
+                                       #shear_range=0.2,
+                                       #zoom_range=0.2,
+                                       #horizontal_flip=True,
                                        # vertical_flip=True,
                                        )
     datagen_train.fit(X_train)
